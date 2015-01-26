@@ -36,6 +36,22 @@ namespace WindowsService2
             this.LogMessage("stop");
         }
 
+        //protected override void OnStart(string[] args)
+        //{
+        //    using (System.IO.StreamWriter sw = new System.IO.StreamWriter("C:\\log.txt", true))
+        //    {
+        //        sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + "Start.");
+        //    }
+        //}
+
+        //protected override void OnStop()
+        //{
+        //    using (System.IO.StreamWriter sw = new System.IO.StreamWriter("C:\\log.txt", true))
+        //    {
+        //        sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ") + "Stop.");
+        //    }
+        //}
+
         private void timer1_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             LogMessage("检查服务运行！");
