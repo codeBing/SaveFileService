@@ -64,7 +64,7 @@ namespace WindowsService2
                 DBHelper db = new DBHelper();
                 //这里向数据库中插入一条信息为 xMsg的记录，下边是我调用事先写好的Db类添加记录的方法，您也可以使用其他办法来写入数据库。
                 //Db.QuerySQL("Insert into SysMsg (SysMsg) values ('"+xMsg+"')");
-                DbCommand cmd = db.GetSqlStringCommond("insert into testservice values('" + xMsg + "')");
+                DbCommand cmd = db.GetSqlStringCommond("insert into testservice values(null,'" + xMsg + "')");
                 db.ExecuteNonQuery(cmd);
             }
             catch
