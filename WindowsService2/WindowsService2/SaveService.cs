@@ -117,23 +117,30 @@ namespace WindowsService2
         //查找是否存在设备号，记录日期和阈值相同的数据
         private int isExist(string[] fileName)
         {
-            DbCommand cmd = db.GetSqlStringCommond("SELECT * FROM `data` WHERE deviceId=" + fileName[0] + " AND date =" + fileName[1] + " AND threshold=" + fileName[3]);
-            DataTable result = db.ExecuteDataTable(cmd);
-            //如果设备号，记录日期和阈值相同
-            if (result.Rows.Count > 0)
+            try
             {
-                DataRow row = result.Rows[0];
-                //设备号，记录日期和阈值相同，但时间戳不一样，更新对应数据
-                if (string.Compare(row[3].ToString(), fileName[2]) < 0)
+                DbCommand cmd = db.GetSqlStringCommond("SELECT * FROM `data` WHERE deviceId=" + fileName[0] + " AND date =" + fileName[1] + " AND threshold=" + fileName[3]);
+                DataTable result = db.ExecuteDataTable(cmd);
+                //如果设备号，记录日期和阈值相同
+                if (result.Rows.Count > 0)
                 {
-                    return 1;
+                    DataRow row = result.Rows[0];
+                    //设备号，记录日期和阈值相同，但时间戳不一样，更新对应数据
+                    if (string.Compare(row[3].ToString(), fileName[2]) < 0)
+                    {
+                        return 1;
+                    }
+                    return -1;
                 }
-                return -1;
+                //不存在相同数据，直接插入
+                else
+                {
+                    return 0;
+                }
             }
-            //不存在相同数据，直接插入
-            else
+            catch
             {
-                return 0;
+                return -1;
             }
         }
 
