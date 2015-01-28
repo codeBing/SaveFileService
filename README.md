@@ -1,0 +1,5 @@
+# SaveFileService
+建立一个windows service
+
+节点传回来的数据以文件的形式保存在cow_data中，需要把这些数据读取出来，保存到数据库，并把源文件移动到cow_data_backup中备份。
+这里需要定时查询cow_data中是否有新的数据文件，且服务器环境是win7，所以可以写成windows service的形式，每隔一段时间自动触发。
