@@ -69,7 +69,7 @@ namespace WindowsService2
             string[] spilt;
             string[] spiltData;
             string fileName;
-            
+            int count = 1;
             //遍历整个文件夹
             foreach (string strFile in strFiles)
             {
@@ -97,7 +97,7 @@ namespace WindowsService2
                 //设备对应的牛Id
                 string cowId = Convert.ToString(cow);
                 //设备号，记录日期和阈值相同，但时间戳较新，更新对应数据
-                int flag = isExist(spilt,cowId);
+                int flag = isExist(spilt, cowId);
                 if (flag == 1)
                 {
                     //读取指定文件第一行
@@ -106,7 +106,7 @@ namespace WindowsService2
                         string s = "";
                         s = sr.ReadLine();
                         spiltData = s.Split(',');
-                        updateData(spilt, spiltData,cowId);
+                        updateData(spilt, spiltData, cowId);
                     }
 
                 }
@@ -119,8 +119,20 @@ namespace WindowsService2
                         string s = "";
                         s = sr.ReadLine();
                         spiltData = s.Split(',');
-                        insertData(spiltData, spilt[2],cowId);
+                        insertData(spiltData, spilt[2], cowId);
                     }
+                }
+                if (count++ == strFiles.Length)
+                {
+                    //读取指定文件第一行
+                    using (StreamReader sr = File.OpenText(strFile))
+                    {
+                        string s = "";
+                        s = sr.ReadLine();
+                        spiltData = s.Split(',');
+                        insertTemp(spiltData, spilt[2], cowId);
+                    }
+
                 }
                 //目标文件已存在，删除目标文件
                 if (File.Exists(backupPath + "\\" + fileName))
@@ -136,11 +148,13 @@ namespace WindowsService2
         }
         //返回-1表示忽略该数据，1表示需要更新数据，0表示插入新数据
         //查找是否存在设备号，记录日期和阈值相同的数据
-        private int isExist(string[] fileName,string cowId)
+        private int isExist(string[] fileName, string cowId)
         {
             try
             {
-                DbCommand cmd = db.GetSqlStringCommond("SELECT * FROM `data` WHERE deviceId=" + fileName[0] + " AND cowId ="+cowId+" AND date =" + fileName[1] + " AND threshold=" + fileName[3]);
+                string date = fileName[1].Insert(4, "/");
+                date = date.Insert(7, "/");
+                DbCommand cmd = db.GetSqlStringCommond("SELECT * FROM `data` WHERE deviceId=" + fileName[0] + " AND cowId =" + cowId + " AND date ='" + date + "' AND threshold=" + fileName[3]);
                 DataTable result = db.ExecuteDataTable(cmd);
                 //如果设备号，记录日期和阈值相同
                 if (result.Rows.Count > 0)
@@ -166,14 +180,16 @@ namespace WindowsService2
         }
 
         //设备号，记录日期和阈值相同，但时间戳不一样，更新对应数据
-        private bool updateData(string[] fileName, string[] data,string cowId)
+        private bool updateData(string[] fileName, string[] data, string cowId)
         {
             try
             {
+                string date = fileName[1].Insert(4, "/");
+                date = date.Insert(7, "/");
                 DbCommand update = db.GetSqlStringCommond("update data set timestamp=" + fileName[2] + ",value1=" + data[4] + ",value2=" + data[5] + ",value3=" + data[6] + ",value4=" + data[7] + ",value5=" + data[8] +
                                      ",value6=" + data[9] + ",value7=" + data[10] + ",value8=" + data[11] + ",value9=" + data[12] + ",value10=" + data[13] + ",value11=" + data[14] + ",value12=" + data[15] + ",value13=" + data[16] +
                                      ",value14=" + data[17] + ",value15=" + data[18] + ",value16=" + data[19] + ",value17=" + data[20] + ",value18=" + data[21] + ",value19=" + data[22] + ",value20=" + data[23] + ",value21=" + data[24] +
-                                     ",value22=" + data[25] + ",value23=" + data[26] + ",value24=" + data[27] + " WHERE deviceId=" + fileName[0] + " AND date =" + fileName[1] + " AND threshold=" + fileName[3] + " AND cowId="+cowId);
+                                     ",value22=" + data[25] + ",value23=" + data[26] + ",value24=" + data[27] + " WHERE deviceId=" + fileName[0] + " AND date ='" + date + "' AND threshold=" + fileName[3] + " AND cowId=" + cowId);
                 db.ExecuteNonQuery(update);
             }
             catch
@@ -184,12 +200,12 @@ namespace WindowsService2
         }
 
         //不存在相同数据，直接插入
-        private bool insertData(string[] data, string timestamp,string cowId)
+        private bool insertData(string[] data, string timestamp, string cowId)
         {
             try
             {
-                DbCommand cmd = db.GetSqlStringCommond("insert into data values(null," + data[0] + ","+cowId + "," +
-                            data[1] + data[2] + data[3] + "," + timestamp + "," + data[28] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] +
+                DbCommand cmd = db.GetSqlStringCommond("insert into data values(null," + data[0] + "," + cowId + ", '" +
+                            data[1] + "/" + data[2] + "/" + data[3] + "'," + timestamp + "," + data[28] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] +
                             "," + data[9] + "," + data[10] + "," + data[11] + "," + data[12] + "," + data[13] + "," + data[14] + "," + data[15] + "," + data[16] +
                             "," + data[17] + "," + data[18] + "," + data[19] + "," + data[20] + "," + data[21] + "," + data[22] + "," + data[23] + "," + data[24] +
                             "," + data[25] + "," + data[26] + "," + data[27] + ")");
@@ -206,12 +222,14 @@ namespace WindowsService2
         {
             try
             {
-                DbCommand cmd = db.GetSqlStringCommond("insert into temp values(null," + data[0] + "," + cowId + "," +
-                            data[1] + data[2] + data[3] + "," + timestamp + "," + data[28] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] +
+                DbCommand delete = db.GetSqlStringCommond("delete from temp");
+                db.ExecuteNonQuery(delete);
+                DbCommand insert = db.GetSqlStringCommond("insert into temp values(null," + data[0] + "," + cowId + ",'" +
+                            data[1] + "/" + data[2] + "/" + data[3] + "'," + timestamp + "," + data[28] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] +
                             "," + data[9] + "," + data[10] + "," + data[11] + "," + data[12] + "," + data[13] + "," + data[14] + "," + data[15] + "," + data[16] +
                             "," + data[17] + "," + data[18] + "," + data[19] + "," + data[20] + "," + data[21] + "," + data[22] + "," + data[23] + "," + data[24] +
                             "," + data[25] + "," + data[26] + "," + data[27] + ")");
-                db.ExecuteNonQuery(cmd);
+                db.ExecuteNonQuery(insert);
             }
             catch
             {
