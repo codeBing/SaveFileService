@@ -60,7 +60,9 @@ namespace WindowsService2
 
         private void timer1_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            this.timer1.Enabled = false;
             saveFile();
+            this.timer1.Enabled = true;
         }
 
         private void saveFile()
@@ -150,12 +152,14 @@ namespace WindowsService2
         //查找是否存在设备号，记录日期和阈值相同的数据
         private int isExist(string[] fileName, string cowId)
         {
+            DataTable result;
+            DbCommand cmd;
             try
             {
                 string date = fileName[1].Insert(4, "/");
                 date = date.Insert(7, "/");
-                DbCommand cmd = db.GetSqlStringCommond("SELECT * FROM `data` WHERE deviceId=" + fileName[0] + " AND cowId =" + cowId + " AND date ='" + date + "' AND threshold=" + fileName[3]);
-                DataTable result = db.ExecuteDataTable(cmd);
+                cmd = db.GetSqlStringCommond("SELECT * FROM `data` WHERE deviceId=" + fileName[0] + " AND cowId =" + cowId + " AND date ='" + date + "' AND threshold=" + fileName[3]);
+                result = db.ExecuteDataTable(cmd);
                 //如果设备号，记录日期和阈值相同
                 if (result.Rows.Count > 0)
                 {
@@ -171,13 +175,15 @@ namespace WindowsService2
                 else
                 {
                     return 0;
-                }
+                } 
+                cmd.Connection.Close();
             }
             catch
             {
                 return -1;
             }
         }
+
 
         //设备号，记录日期和阈值相同，但时间戳不一样，更新对应数据
         private bool updateData(string[] fileName, string[] data, string cowId)
